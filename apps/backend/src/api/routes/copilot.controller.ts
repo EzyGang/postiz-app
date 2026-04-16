@@ -22,7 +22,10 @@ import { MastraService } from '@gitroom/nestjs-libraries/chat/mastra.service';
 import { Request, Response } from 'express';
 import { RequestContext } from '@mastra/core/di';
 import { CheckPolicies } from '@gitroom/backend/services/auth/permissions/permissions.ability';
-import { AuthorizationActions, Sections } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
+import {
+  AuthorizationActions,
+  Sections,
+} from '@gitroom/backend/services/auth/permissions/permission.exception.class';
 
 export type ChannelsContext = {
   integrations: string;
@@ -34,7 +37,7 @@ export type ChannelsContext = {
 export class CopilotController {
   constructor(
     private _subscriptionService: SubscriptionService,
-    private _mastraService: MastraService
+    private _mastraService: MastraService,
   ) {}
   @Post('/chat')
   chatAgent(@Req() req: Request, @Res() res: Response) {
@@ -51,7 +54,6 @@ export class CopilotController {
       runtime: new CopilotRuntime(),
       serviceAdapter: new OpenAIAdapter({
         model: process.env.OPENAI_CHAT_MODEL || 'gpt-4.1',
-        baseUrl: process.env.OPENAI_BASE_URL,
       }),
     });
 
@@ -63,7 +65,7 @@ export class CopilotController {
   async agent(
     @Req() req: Request,
     @Res() res: Response,
-    @GetOrgFromRequest() organization: Organization
+    @GetOrgFromRequest() organization: Organization,
   ) {
     if (
       process.env.OPENAI_API_KEY === undefined ||
@@ -76,7 +78,7 @@ export class CopilotController {
     const requestContext = new RequestContext<ChannelsContext>();
     requestContext.set(
       'integrations',
-      req?.body?.variables?.properties?.integrations || []
+      req?.body?.variables?.properties?.integrations || [],
     );
 
     requestContext.set('organization', JSON.stringify(organization));
@@ -98,7 +100,6 @@ export class CopilotController {
       // properties: req.body.variables.properties,
       serviceAdapter: new OpenAIAdapter({
         model: process.env.OPENAI_CHAT_MODEL || 'gpt-4.1',
-        baseUrl: process.env.OPENAI_BASE_URL,
       }),
     });
 
@@ -108,11 +109,11 @@ export class CopilotController {
   @Get('/credits')
   calculateCredits(
     @GetOrgFromRequest() organization: Organization,
-    @Query('type') type: 'ai_images' | 'ai_videos'
+    @Query('type') type: 'ai_images' | 'ai_videos',
   ) {
     return this._subscriptionService.checkCredits(
       organization,
-      type || 'ai_images'
+      type || 'ai_images',
     );
   }
 
@@ -120,7 +121,7 @@ export class CopilotController {
   @CheckPolicies([AuthorizationActions.Create, Sections.AI])
   async getMessagesList(
     @GetOrgFromRequest() organization: Organization,
-    @Param('thread') threadId: string
+    @Param('thread') threadId: string,
   ): Promise<any> {
     const mastra = await this._mastraService.mastra();
     const memory = await mastra.getAgent('postiz').getMemory();

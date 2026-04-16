@@ -15,7 +15,7 @@ const model = new ChatOpenAI({
   model: CHAT_MODEL,
   temperature: 0,
   configuration: {
-    basePath: process.env.OPENAI_BASE_URL,
+    baseURL: process.env.OPENAI_BASE_URL,
   },
 });
 
@@ -66,7 +66,7 @@ You are an assistant that get a social media post and categorize it into to one 
 {categories}
 Here is the post:
 {post}
-    `
+    `,
     )
       .pipe(structuredOutput)
       .invoke({
@@ -84,7 +84,7 @@ You are an assistant that get a social media post and categorize it into one of 
 {topics}
 Here is the post:
 {post}
-    `
+    `,
     )
       .pipe(structuredOutput)
       .invoke({
@@ -100,7 +100,7 @@ Here is the post:
       `
 You are an assistant that get a social media post and extract the hook, the hook is usually the first or second of both sentence of the post, but can be in a different place, make sure you don't change the wording of the post use the exact text:
 {post}
-    `
+    `,
     )
       .pipe(structuredOutput)
       .invoke({
