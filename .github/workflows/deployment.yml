@@ -26,7 +26,7 @@ jobs:
     if: github.event_name == 'push' || inputs.environment == 'main'
     environment:
       name: release
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
