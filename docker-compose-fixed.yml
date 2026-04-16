@@ -1,0 +1,94 @@
+services:
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./postiz-config:/config/
+      - ./postiz-uploads:/uploads/
+    ports:
+      - "127.0.0.1:4007:5000"
+    depends_on:
+      postiz-postgres:
+        condition: service_healthy
+      postiz-redis:
+        condition: service_healthy
+
+  postiz-postgres:
+    image: postgres:17-alpine
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postiz-user -d postiz-db-local
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  postiz-redis:
+    image: redis:7.2
+    restart: always
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - ./redis-data:/data
+
+  # For Application Monitoring / Debugging
+  spotlight:
+    pull_policy: always
+    ports:
+      - 127.0.0.1:8969:8969/tcp
+    image: ghcr.io/getsentry/spotlight:latest
+
+  # -----------------------
+  # Temporal Stack
+  # -----------------------
+  temporal-elasticsearch:
+    image: elasticsearch:7.17.27
+    env_file:
+      - .env
+    volumes:
+      - ./elasticsearch-data:/var/lib/elasticsearch/data
+
+  temporal-postgresql:
+    image: postgres:16
+    env_file:
+      - .env
+    volumes:
+      - ./temporal-postgres-data:/var/lib/postgresql/data
+
+  temporal:
+    ports:
+      - '127.0.0.1:7233:7233'
+    image: temporalio/auto-setup:1.28.1
+    depends_on:
+      - temporal-postgresql
+      - temporal-elasticsearch
+    env_file:
+      - .env
+    volumes:
+      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+    labels:
+      kompose.volume.type: configMap
+
+  temporal-admin-tools:
+    image: temporalio/admin-tools:1.28.1-tctl-1.18.4-cli-1.4.1
+    env_file:
+      - .env
+    stdin_open: true
+    depends_on:
+      - temporal
+    tty: true
+
+  temporal-ui:
+    image: temporalio/ui:2.34.0
+    env_file:
+      - .env
+    ports:
+      - '127.0.0.1:8080:8080'
