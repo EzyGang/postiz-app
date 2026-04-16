@@ -8,10 +8,15 @@ import { z } from 'zod';
 import { agentTopics } from '@gitroom/nestjs-libraries/agent/agent.topics';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
 
+const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-4o-2024-08-06';
+
 const model = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'gpt-4o-2024-08-06',
+  model: CHAT_MODEL,
   temperature: 0,
+  configuration: {
+    basePath: process.env.OPENAI_BASE_URL,
+  },
 });
 
 interface WorkflowChannelsState {

@@ -4,8 +4,19 @@ import { shuffle } from 'lodash';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 
-const openai = new OpenAI({
+const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-4.1';
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'dall-e-3';
+
+// Chat client - uses main OpenAI config
+const openaiChat = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
+  baseURL: process.env.OPENAI_BASE_URL || undefined,
+});
+
+// Image client - can use separate provider config
+const openaiImage = new OpenAI({
+  apiKey: process.env.OPENAI_IMAGE_API_KEY || process.env.OPENAI_API_KEY || 'sk-proj-',
+  baseURL: process.env.OPENAI_IMAGE_BASE_URL || process.env.OPENAI_BASE_URL || undefined,
 });
 
 const PicturePrompt = z.object({
@@ -20,10 +31,10 @@ const VoicePrompt = z.object({
 export class OpenaiService {
   async generateImage(prompt: string, isUrl: boolean, isVertical = false) {
     const generate = (
-      await openai.images.generate({
+      await openaiImage.images.generate({
         prompt,
         response_format: isUrl ? 'url' : 'b64_json',
-        model: 'dall-e-3',
+        model: IMAGE_MODEL,
         ...(isVertical ? { size: '1024x1792' } : {}),
       })
     ).data[0];
@@ -34,8 +45,8 @@ export class OpenaiService {
   async generatePromptForPicture(prompt: string) {
     return (
       (
-        await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+        await openaiChat.chat.completions.parse({
+          model: CHAT_MODEL,
           messages: [
             {
               role: 'system',
@@ -55,8 +66,8 @@ export class OpenaiService {
   async generateVoiceFromText(prompt: string) {
     return (
       (
-        await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+        await openaiChat.chat.completions.parse({
+          model: CHAT_MODEL,
           messages: [
             {
               role: 'system',
@@ -76,7 +87,7 @@ export class OpenaiService {
   async generatePosts(content: string) {
     const posts = (
       await Promise.all([
-        openai.chat.completions.create({
+        openaiChat.chat.completions.create({
           messages: [
             {
               role: 'assistant',
@@ -90,9 +101,9 @@ export class OpenaiService {
           ],
           n: 5,
           temperature: 1,
-          model: 'gpt-4.1',
+          model: CHAT_MODEL,
         }),
-        openai.chat.completions.create({
+        openaiChat.chat.completions.create({
           messages: [
             {
               role: 'assistant',
@@ -106,7 +117,7 @@ export class OpenaiService {
           ],
           n: 5,
           temperature: 1,
-          model: 'gpt-4.1',
+          model: CHAT_MODEL,
         }),
       ])
     ).flatMap((p) => p.choices);
@@ -132,7 +143,7 @@ export class OpenaiService {
     );
   }
   async extractWebsiteText(content: string) {
-    const websiteContent = await openai.chat.completions.create({
+    const websiteContent = await openaiChat.chat.completions.create({
       messages: [
         {
           role: 'assistant',
@@ -163,8 +174,8 @@ export class OpenaiService {
 
     const posts =
       (
-        await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+        await openaiChat.chat.completions.parse({
+          model: CHAT_MODEL,
           messages: [
             {
               role: 'system',
@@ -196,8 +207,8 @@ export class OpenaiService {
             try {
               return (
                 (
-                  await openai.chat.completions.parse({
-                    model: 'gpt-4.1',
+                  await openaiChat.chat.completions.parse({
+                    model: CHAT_MODEL,
                     messages: [
                       {
                         role: 'system',
@@ -232,8 +243,8 @@ export class OpenaiService {
         const message = `You are an assistant that takes a text and break it into slides, each slide should have an image prompt and voice text to be later used to generate a video and voice, image prompt should capture the essence of the slide and also have a back dark gradient on top, image prompt should not contain text in the picture, generate between 3-5 slides maximum`;
         const parse =
           (
-            await openai.chat.completions.parse({
-              model: 'gpt-4.1',
+            await openaiChat.chat.completions.parse({
+              model: CHAT_MODEL,
               messages: [
                 {
                   role: 'system',
