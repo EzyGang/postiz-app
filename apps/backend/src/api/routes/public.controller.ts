@@ -98,10 +98,9 @@ export class PublicController {
     );
     if (!req.cookies.track) {
       res.cookie('track', uniqueId, {
-        domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
         ...(!process.env.NOT_SECURED
           ? {
-              secure: true,
+              secure: false,
               httpOnly: true,
             }
           : {}),
@@ -112,10 +111,9 @@ export class PublicController {
 
     if (body.fbclid && !req.cookies.fbclid) {
       res.cookie('fbclid', body.fbclid, {
-        domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
         ...(!process.env.NOT_SECURED
           ? {
-              secure: true,
+              secure: false,
               httpOnly: true,
             }
           : {}),

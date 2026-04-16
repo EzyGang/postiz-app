@@ -304,10 +304,9 @@ export class UsersController {
     );
     if (!req.cookies.track) {
       res.cookie('track', uniqueId, {
-        domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
         ...(!process.env.NOT_SECURED
           ? {
-              secure: true,
+              secure: false,
               httpOnly: true,
               sameSite: 'none',
             }

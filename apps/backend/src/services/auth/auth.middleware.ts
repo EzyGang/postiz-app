@@ -10,10 +10,9 @@ import { MastraService } from '@gitroom/nestjs-libraries/chat/mastra.service';
 
 export const removeAuth = (res: Response) => {
   res.cookie('auth', '', {
-    domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
     ...(!process.env.NOT_SECURED
       ? {
-          secure: true,
+          secure: false,
           httpOnly: true,
           sameSite: 'none',
         }
